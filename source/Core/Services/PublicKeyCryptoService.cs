@@ -115,6 +115,10 @@
         /// <param name="privateKey">The base64url-encoded private signing key to use.</param>
         /// <param name="challenge">The base64url-encoded challenge to sign.</param>
         /// <returns>The resulting base64url-encoded signature.</returns>
+        /// <remarks>
+        /// The returned signature appears to be the concatenated octet sequences R and S.
+        /// If so, this is exactly what we need in order to convert to JWS.
+        /// </remarks>
         public static string SignChallenge(string privateKey, string challenge)
         {
             using (var key = CngKey.Import(Base64Url.Decode(privateKey), CngKeyBlobFormat.EccPrivateBlob))
