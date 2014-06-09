@@ -110,7 +110,7 @@
         }
 
         /// <summary>
-        /// Signs a challenge using the specified private key and hash algorithm.
+        /// Signs a challenge using the specified private key.
         /// </summary>
         /// <param name="privateKey">The base64url-encoded private signing key to use.</param>
         /// <param name="challenge">The base64url-encoded challenge to sign.</param>
