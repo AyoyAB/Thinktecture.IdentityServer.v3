@@ -150,6 +150,7 @@
     <Compile Include="Connect\Services\IClaimsProvider.cs" />
     <Compile Include="Connect\Services\ICustomRequestValidator.cs" />
     <Compile Include="Connect\Services\ITransientDataRepository.cs" />
+    <Compile Include="Services\PublicKeyCryptoService.cs" />
     <Compile Include="Connect\Validation\ClientValidator.cs" />
     <Compile Include="Connect\Validation\ScopeValidator.cs" />
     <Compile Include="Connect\Validation\TokenValidationResult.cs" />
@@ -209,11 +210,14 @@
     <Compile Include="Services\InMemory\InMemoryAuthorizationCodeStore.cs" />
     <Compile Include="Services\InMemory\InMemoryClientService.cs" />
     <Compile Include="Services\InMemory\InMemoryConsentService.cs" />
+    <Compile Include="Services\InMemory\InMemoryPublicKeyUser.cs" />
+    <Compile Include="Services\InMemory\InMemoryPublicKeyUserService.cs" />
     <Compile Include="Services\InMemory\InMemoryScopeService.cs" />
     <Compile Include="Services\InMemory\InMemoryTokenHandleStore.cs" />
     <Compile Include="Services\InMemory\InMemoryUser.cs" />
     <Compile Include="Services\InMemory\InMemoryUserService.cs" />
     <Compile Include="Services\InternalProtectionSettings.cs" />
+    <Compile Include="Services\IPublicKeyUserService.cs" />
     <Compile Include="Services\IScopeService.cs" />
     <Compile Include="Services\IUserService.cs" />
     <Compile Include="Connect\Services\ITokenHandleStore.cs" />

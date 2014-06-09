@@ -77,8 +77,10 @@
     <Compile Include="..\..\VersionAssemblyInfo.cs">
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Authentication Tests\Public Key Authentication\PublicKeyLocalAuthentication.cs" />
     <Compile Include="Plumbing\TestAssertionValidator.cs" />
     <Compile Include="Plumbing\TestClients.cs" />
+    <Compile Include="Plumbing\TestPublicKeyUsers.cs" />
     <Compile Include="Plumbing\TestScopes.cs" />
     <Compile Include="Plumbing\TestUserService.cs" />
     <Compile Include="Plumbing\ValidatorFactory.cs" />
