@@ -11,40 +11,84 @@
     public static class PublicKeyCryptoService
     {
         /// <summary>
-        /// Random number generator.
+        /// The size of generated challenges.
         /// </summary>
-        private static readonly RandomNumberGenerator Rng = new RNGCryptoServiceProvider();
+        private const int ChallengeSize = 16;
 
         /// <summary>
-        /// Generates a base64url-encoded challenge string to sign.
+        /// The public key algorithm to use.
+        /// </summary>
+        private static readonly CngAlgorithm PublicKeyAlgorithm = CngAlgorithm.ECDsaP256;
+
+        /// <summary>
+        /// The hash algorithm to use.
+        /// </summary>
+        private static readonly CngAlgorithm HashAlgorithm = CngAlgorithm.Sha256;
+
+        /// <summary>
+        /// Generates a challenge string to sign.
         /// </summary>
         /// <returns>
-        /// The generated challenge.
+        /// The base64url-encoded generated challenge.
         /// </returns>
         public static string GenerateChallenge()
         {
-            var bytes = new byte[16];
+            var bytes = new byte[ChallengeSize];
 
-            Rng.GetBytes(bytes);
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(bytes);
+            }
 
             return Base64Url.Encode(bytes);
         }
 
         /// <summary>
-        /// Signs a challenge using the specified key and hash algorithm.
+        /// Generates a private signing key.
         /// </summary>
-        /// <param name="key">The signing key to use.</param>
-        /// <param name="hashAlgorithm">The hash algorithm.</param>
+        /// <returns>The base64url-encoded private key.</returns>
+        public static string GeneratePrivateKey()
+        {
+            using (
+                var key = CngKey.Create(
+                    PublicKeyAlgorithm,
+                    null,
+                    new CngKeyCreationParameters { ExportPolicy = CngExportPolicies.AllowPlaintextExport }))
+            {
+                return Base64Url.Encode(key.Export(CngKeyBlobFormat.EccPrivateBlob));
+            }
+        }
+
+        /// <summary>
+        /// Extracts the public key from a private key.
+        /// </summary>
+        /// <param name="privateKey">he base64url-encoded private key.</param>
+        /// <returns>The base64url-encoded public key.</returns>
+        public static string ExtractPublicKey(string privateKey)
+        {
+            using (var key = CngKey.Import(Base64Url.Decode(privateKey), CngKeyBlobFormat.EccPrivateBlob))
+            {
+                return Base64Url.Encode(key.Export(CngKeyBlobFormat.EccPublicBlob));
+            }
+        }
+
+        /// <summary>
+        /// Signs a challenge using the specified private key and hash algorithm.
+        /// </summary>
+        /// <param name="privateKey">The base64url-encoded private signing key to use.</param>
         /// <param name="challenge">The base64url-encoded challenge to sign.</param>
         /// <returns>The resulting base64url-encoded signature.</returns>
-        public static string SignChallenge(CngKey key, CngAlgorithm hashAlgorithm, string challenge)
+        public static string SignChallenge(string privateKey, string challenge)
         {
-            using (var signer = new ECDsaCng(key))
+            using (var key = CngKey.Import(Base64Url.Decode(privateKey), CngKeyBlobFormat.EccPrivateBlob))
             {
-                signer.HashAlgorithm = hashAlgorithm;
-                var signature = signer.SignData(Encoding.ASCII.GetBytes(challenge));
+                using (var signer = new ECDsaCng(key))
+                {
+                    signer.HashAlgorithm = HashAlgorithm;
+                    var signature = signer.SignData(Encoding.ASCII.GetBytes(challenge));
 
-                return Base64Url.Encode(signature);
+                    return Base64Url.Encode(signature);
+                }
             }
         }
 
@@ -59,11 +103,12 @@
         {
             try
             {
-                using (
-                    var verifier =
-                        new ECDsaCng(CngKey.Import(Base64Url.Decode(publicKey), CngKeyBlobFormat.EccPublicBlob)))
+                using (var key = CngKey.Import(Base64Url.Decode(publicKey), CngKeyBlobFormat.EccPublicBlob))
                 {
-                    return verifier.VerifyData(Encoding.ASCII.GetBytes(challenge), Base64Url.Decode(signature));
+                    using (var verifier = new ECDsaCng(key))
+                    {
+                        return verifier.VerifyData(Encoding.ASCII.GetBytes(challenge), Base64Url.Decode(signature));
+                    }
                 }
             }
             catch

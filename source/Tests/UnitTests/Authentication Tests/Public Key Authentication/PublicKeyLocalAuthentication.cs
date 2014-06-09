@@ -1,6 +1,5 @@
 ﻿namespace Thinktecture.IdentityServer.Tests.Authentication_Tests.Public_Key_Authentication
 {
-    using System.Security.Cryptography;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -66,7 +65,6 @@
 
             var signature = PublicKeyCryptoService.SignChallenge(
                 TestPublicKeyUsers.AliceKey,
-                CngAlgorithm.Sha256,
                 "invalid challenge");
 
             var result =
@@ -87,7 +85,6 @@
 
             var signature = PublicKeyCryptoService.SignChallenge(
                 TestPublicKeyUsers.AliceKey,
-                CngAlgorithm.Sha256,
                 PublicKeyCryptoService.GenerateChallenge());
 
             var result =
@@ -125,7 +122,6 @@
 
             var signature = PublicKeyCryptoService.SignChallenge(
                 TestPublicKeyUsers.BobKey,
-                CngAlgorithm.Sha256,
                 TestPublicKeyUsers.AliceUser.Challenge);
 
             var result =
@@ -140,13 +136,12 @@
         /// <returns>The <see cref="Task"/> to wait on.</returns>
         [TestMethod]
         [TestCategory(Category)]
-        public async Task ValidSignature()
+        public async Task ValidSignatureAlice()
         {
             TestPublicKeyUsers.AliceUser.Challenge = PublicKeyCryptoService.GenerateChallenge();
 
             var signature = PublicKeyCryptoService.SignChallenge(
                 TestPublicKeyUsers.AliceKey,
-                CngAlgorithm.Sha256,
                 TestPublicKeyUsers.AliceUser.Challenge);
 
             var result =
@@ -156,6 +151,29 @@
             Assert.IsFalse(result.IsError);
             Assert.AreEqual(TestPublicKeyUsers.AliceUser.Subject, result.Subject);
             Assert.AreEqual(TestPublicKeyUsers.AliceUser.Username, result.Name);
+        }
+
+        /// <summary>
+        /// Authenticating with a valid signed challenge should succeed.
+        /// </summary>
+        /// <returns>The <see cref="Task"/> to wait on.</returns>
+        [TestMethod]
+        [TestCategory(Category)]
+        public async Task ValidSignatureBob()
+        {
+            TestPublicKeyUsers.BobUser.Challenge = PublicKeyCryptoService.GenerateChallenge();
+
+            var signature = PublicKeyCryptoService.SignChallenge(
+                TestPublicKeyUsers.BobKey,
+                TestPublicKeyUsers.BobUser.Challenge);
+
+            var result =
+                await UserService.AuthenticatePublicKeyLocalAsync(TestPublicKeyUsers.BobUser.Username, signature);
+
+            Assert.IsNotNull(result);
+            Assert.IsFalse(result.IsError);
+            Assert.AreEqual(TestPublicKeyUsers.BobUser.Subject, result.Subject);
+            Assert.AreEqual(TestPublicKeyUsers.BobUser.Username, result.Name);
         }
     }
 }
