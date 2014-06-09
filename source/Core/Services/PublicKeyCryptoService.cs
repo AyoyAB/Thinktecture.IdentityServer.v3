@@ -47,6 +47,25 @@
         /// Generates a private signing key.
         /// </summary>
         /// <returns>The base64url-encoded private key.</returns>
+        /// <remarks>
+        /// <para>
+        /// The results don't appear difficult to convert to a JWK, which is probably a preferential format.
+        /// </para>
+        /// <para>
+        /// An eight-byte header: "ECS2" | 0x20000000 (0x20 => P-256 key size)
+        /// 32 bytes of, presumably, the public key curve point x coordinate.
+        /// 32 bytes of, presumably, the public key curve point y coordinate.
+        /// 32 bytes of the private key integer d.
+        /// </para>
+        /// <para>
+        /// P-384 testing confirms this. In this case the header is "ECS4" | 0x30000000 (0x30 => P-384 key size)
+        /// The three 48 byte key components follow as above.
+        /// </para>
+        /// <para>
+        /// P-521 produces the same kind of results. The header is "ECS6" | 0x42000000 (0x42 => P-521 key size)
+        /// The three 66 byte key components follow as above.
+        /// </para>
+        /// </remarks>
         public static string GeneratePrivateKey()
         {
             using (
@@ -64,6 +83,24 @@
         /// </summary>
         /// <param name="privateKey">he base64url-encoded private key.</param>
         /// <returns>The base64url-encoded public key.</returns>
+        /// <remarks>
+        /// <para>
+        /// The results don't appear difficult to convert to a JWK, which is probably a preferential format.
+        /// </para>
+        /// <para>
+        /// An eight-byte header: "ECS1" | 0x20000000 (0x20 => P-256 key size)
+        /// 32 bytes of, presumably, the public key curve point x coordinate.
+        /// 32 bytes of, presumably, the public key curve point y coordinate.
+        /// </para>
+        /// <para>
+        /// P-384 testing confirms this. In this case the header is "ECS3" | 0x30000000 (0x30 => P-384 key size)
+        /// The two 48 byte key components follow as above.
+        /// </para>
+        /// <para>
+        /// P-521 produces the same kind of results. The header is "ECS5" | 0x42000000 (0x42 => P-521 key size)
+        /// The two 66 byte key components follow as above.
+        /// </para>
+        /// </remarks>
         public static string ExtractPublicKey(string privateKey)
         {
             using (var key = CngKey.Import(Base64Url.Decode(privateKey), CngKeyBlobFormat.EccPrivateBlob))
