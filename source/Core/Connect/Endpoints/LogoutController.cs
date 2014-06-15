@@ -4,31 +4,39 @@
  */
 using System.Web.Http;
 using Thinktecture.IdentityServer.Core.Assets;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
 
 namespace Thinktecture.IdentityServer.Core.Connect
 {
     public class LogoutController : ApiController
     {
-        ILogger logger;
-        CoreSettings settings;
-        public LogoutController(ILogger logger, CoreSettings settings)
+        ILog _logger;
+        CoreSettings _settings;
+
+        public LogoutController(CoreSettings settings)
         {
-            this.logger = logger;
-            this.settings = settings;
+            _logger = LogProvider.GetCurrentClassLogger();
+            _settings = settings;
         }
 
         [Route("connect/logout", Name=Constants.RouteNames.LogoutPrompt)]
         [HttpGet]
         public IHttpActionResult Logout()
         {
-            logger.Start("[LogoutController.Logout] called");
+            _logger.Info("End session request");
+
+            if (!_settings.EndSessionEndpoint.Enabled)
+            {
+                _logger.Warn("Endpoint is disabled. Aborting");
+                return NotFound();
+            }
 
             return new EmbeddedHtmlResult(
                 Request,
                 new LayoutModel
                 {
-                    Server = settings.SiteName,
+                    Server = _settings.SiteName,
                     Page = "logoutprompt",
                     PageModel = new
                     {

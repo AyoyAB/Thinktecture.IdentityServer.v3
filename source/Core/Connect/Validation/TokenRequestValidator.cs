@@ -7,15 +7,17 @@ using System;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using Thinktecture.IdentityServer.Core.Connect.Services;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
 using Thinktecture.IdentityServer.Core.Plumbing;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Core.Connect
 {
     public class TokenRequestValidator
     {
         private readonly CoreSettings _settings;
-        private readonly ILogger _logger;
+        private readonly ILog _logger;
         private readonly IAuthorizationCodeStore _authorizationCodes;
         private readonly IUserService _users;
         private readonly IScopeService _scopes;
@@ -32,10 +34,11 @@ namespace Thinktecture.IdentityServer.Core.Connect
             }
         }
 
-        public TokenRequestValidator(CoreSettings settings, ILogger logger, IAuthorizationCodeStore authorizationCodes, IUserService users, IScopeService scopes, IAssertionGrantValidator assertionValidator, ICustomRequestValidator customRequestValidator)
+        public TokenRequestValidator(CoreSettings settings, IAuthorizationCodeStore authorizationCodes, IUserService users, IScopeService scopes, IAssertionGrantValidator assertionValidator, ICustomRequestValidator customRequestValidator)
         {
+            _logger = LogProvider.GetCurrentClassLogger();
+
             _settings = settings;
-            _logger = logger;
             _authorizationCodes = authorizationCodes;
             _users = users;
             _scopes = scopes;
@@ -45,6 +48,8 @@ namespace Thinktecture.IdentityServer.Core.Connect
 
         public async Task<ValidationResult> ValidateRequestAsync(NameValueCollection parameters, Client client)
         {
+            _logger.Info("Starting request validation");
+
             _validatedRequest = new ValidatedTokenRequest();
 
             if (client == null)
@@ -71,7 +76,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
                 return Invalid(Constants.TokenErrors.UnsupportedGrantType);
             }
 
-            _logger.InformationFormat("Grant type: {0}", grantType);
+            _logger.InfoFormat("Grant type: {0}", grantType);
             _validatedRequest.GrantType = grantType;
 
             switch (grantType)
@@ -135,7 +140,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
             }
             else
             {
-                _logger.InformationFormat("Authorization code found: {0}", code);
+                _logger.InfoFormat("Authorization code found: {0}", code);
             }
 
             await _authorizationCodes.RemoveAsync(code);
@@ -176,6 +181,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
                 return Invalid(Constants.TokenErrors.UnauthorizedClient);
             }
 
+            _logger.Info("Successful validation of authorization_code request");
             return Valid();
         }
 
@@ -205,6 +211,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
                 return Invalid(Constants.TokenErrors.InvalidScope);
             }
 
+            _logger.Info("Successful validation of client_credentials request");
             return Valid();
         }
 
@@ -255,6 +262,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
                 return Invalid(Constants.TokenErrors.InvalidGrant);
             }
 
+            _logger.Info("Successful validation of password request");
             return Valid();
         }
 
@@ -284,7 +292,7 @@ namespace Thinktecture.IdentityServer.Core.Connect
             /////////////////////////////////////////////
             // validate assertion
             /////////////////////////////////////////////
-            var principal = await _assertionValidator.ValidateAsync(_validatedRequest);
+            var principal = await _assertionValidator.ValidateAsync(_validatedRequest, _users);
             if (principal == null)
             {
                 _logger.Error("Invalid assertion.");
@@ -292,12 +300,14 @@ namespace Thinktecture.IdentityServer.Core.Connect
             }
 
             _validatedRequest.Subject = principal;
+
+            _logger.Info("Successful validation of assertion request");
             return Valid();
         }
 
         private async Task<bool> ValidateRequestedScopesAsync(NameValueCollection parameters)
         {
-            var scopeValidator = new ScopeValidator(_logger);
+            var scopeValidator = new ScopeValidator();
             var requestedScopes = scopeValidator.ParseScopes(parameters.Get(Constants.TokenRequest.Scope));
 
             if (requestedScopes == null)

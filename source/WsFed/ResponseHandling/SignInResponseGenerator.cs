@@ -9,28 +9,32 @@ using System.IdentityModel.Services;
 using System.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Thinktecture.IdentityServer.Core.Models;
-using Thinktecture.IdentityServer.WsFed.Validation;
-using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityModel;
+using Thinktecture.IdentityServer.Core;
+using Thinktecture.IdentityServer.Core.Logging;
+using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
+using Thinktecture.IdentityServer.WsFed.Validation;
 
 namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
 {
     public class SignInResponseGenerator
     {
-        private ILogger _logger;
+        private ILog _logger;
         private CoreSettings _settings;
         private IUserService _users;
         
-        public SignInResponseGenerator(ILogger logger, CoreSettings settings, IUserService users)
+        public SignInResponseGenerator(CoreSettings settings, IUserService users)
         {
-            _logger = logger;
+            _logger = LogProvider.GetCurrentClassLogger();
             _settings = settings;
             _users = users;
         }
 
         public async Task<SignInResponseMessage> GenerateResponseAsync(SignInValidationResult validationResult)
         {
+            _logger.Info("Creating WS-Federation signin response");
+
             // create subject
             var outgoingSubject = await CreateSubjectAsync(validationResult);
 
@@ -76,7 +80,6 @@ namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
                 }
             }
 
-            // todo: do complete mapping
             if (validationResult.Subject.GetAuthenticationMethod() == Constants.AuthenticationMethods.Password)
             {
                 mappedClaims.Add(new Claim(ClaimTypes.AuthenticationMethod, AuthenticationMethods.Password));
@@ -99,6 +102,11 @@ namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
                 TokenType = validationResult.RelyingParty.TokenType
             };
 
+            if (validationResult.RelyingParty.EncryptingCertificate != null)
+            {
+                descriptor.EncryptingCredentials = new X509EncryptingCredentials(validationResult.RelyingParty.EncryptingCertificate);
+            }
+
             return CreateSupportedSecurityTokenHandler().CreateToken(descriptor);
         }
 
@@ -112,6 +120,5 @@ namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
                 new JwtSecurityTokenHandler()
             });
         }
-
     }
 }

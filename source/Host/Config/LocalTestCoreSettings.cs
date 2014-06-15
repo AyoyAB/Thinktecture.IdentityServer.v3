@@ -2,6 +2,7 @@
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Host.Config
 {
@@ -51,19 +52,6 @@ namespace Thinktecture.IdentityServer.Host.Config
         public override string PublicHostName
         {
             get { return _publicHostAddress; }
-        }
-
-        public override InternalProtectionSettings GetInternalProtectionSettings()
-        {
-            var settings = new InternalProtectionSettings
-            {
-                Issuer = IssuerUri,
-                Audience = "internal",
-                SigningKey = "jKhUkbfzz4IqMTo66J6GATNgOWqA38SFNMCo/FR1Yhs=",
-                Ttl = 60
-            };
-
-            return settings;
         }
 
         private static byte[] ReadStream(Stream input)

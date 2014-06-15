@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Thinktecture.IdentityServer.Core.Authentication;
-using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace UnitTests.Plumbing
 {
@@ -28,6 +28,11 @@ namespace UnitTests.Plumbing
         }
 
         public Task<ExternalAuthenticateResult> AuthenticateExternalAsync(string subject, Thinktecture.IdentityServer.Core.Models.ExternalIdentity user)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> IsActive(string subject)
         {
             throw new NotImplementedException();
         }

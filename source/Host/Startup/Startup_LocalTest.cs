@@ -4,6 +4,7 @@ using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.Twitter;
 using Owin;
 using Thinktecture.IdentityServer.Core.Configuration;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Host.Config;
 using Thinktecture.IdentityServer.WsFed.Configuration;
 using Thinktecture.IdentityServer.WsFed.Services;
@@ -16,6 +17,8 @@ namespace Thinktecture.IdentityServer.Host
     {
         public void Configuration(IAppBuilder app)
         {
+            LogProvider.SetCurrentLogProvider(new DiagnosticsTraceLogProvider());
+
             app.Map("/core", coreApp =>
                 {
                     var factory = LocalTestFactory.Create(
@@ -70,6 +73,7 @@ namespace Thinktecture.IdentityServer.Host
             var options = new WsFederationPluginOptions(dependencies)
             {
                 RelyingPartyService = () => new InMemoryRelyingPartyService(LocalTestRelyingParties.Get()),
+                EnableFederationMetadata = true
             };
 
             app.UseWsFederationPlugin(options);

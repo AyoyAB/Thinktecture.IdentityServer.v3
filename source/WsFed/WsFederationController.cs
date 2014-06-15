@@ -3,14 +3,17 @@
  * see license
  */
 using System.IdentityModel.Services;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityServer.Core.Authentication;
+using Thinktecture.IdentityServer.Core.Configuration;
 using Thinktecture.IdentityServer.Core.Extensions;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
+using Thinktecture.IdentityServer.WsFed.Configuration;
 using Thinktecture.IdentityServer.WsFed.ResponseHandling;
 using Thinktecture.IdentityServer.WsFed.Results;
 using Thinktecture.IdentityServer.WsFed.Services;
@@ -22,39 +25,48 @@ namespace Thinktecture.IdentityServer.WsFed
     public class WsFederationController : ApiController
     {
         private readonly CoreSettings _settings;
-        private ILogger _logger;
-  
-        private SignInValidator _validator;
-        private SignInResponseGenerator _signInResponseGenerator;
-        private MetadataResponseGenerator _metadataResponseGenerator;
-        private ICookieService _cookies;
+        private readonly WsFederationPluginOptions _wsfedOptions;
+        private readonly SignInValidator _validator;
+        private readonly SignInResponseGenerator _signInResponseGenerator;
+        private readonly MetadataResponseGenerator _metadataResponseGenerator;
+        private readonly ITrackingCookieService _cookies;
+        private readonly InternalConfiguration _internalConfig;
 
-        public WsFederationController(CoreSettings settings, IUserService users, ILogger logger, SignInValidator validator, SignInResponseGenerator signInResponseGenerator, MetadataResponseGenerator metadataResponseGenerator, ICookieService cookies)
+        private readonly ILog _logger;
+  
+        public WsFederationController(CoreSettings settings, IUserService users, SignInValidator validator, SignInResponseGenerator signInResponseGenerator, MetadataResponseGenerator metadataResponseGenerator, ITrackingCookieService cookies, InternalConfiguration internalConfig, WsFederationPluginOptions wsFedOptions)
         {
             _settings = settings;
-            _logger = logger;
-
+            _internalConfig = internalConfig;
+            _wsfedOptions = wsFedOptions;
             _validator = validator;
             _signInResponseGenerator = signInResponseGenerator;
             _metadataResponseGenerator = metadataResponseGenerator;
             _cookies = cookies;
+
+            _logger = LogProvider.GetCurrentClassLogger();
         }
 
         [Route("wsfed")]
         public async Task<IHttpActionResult> Get()
         {
+            _logger.Info("Start WS-Federation request");
+            _logger.Debug(Request.RequestUri.AbsoluteUri);
+
             WSFederationMessage message;
             if (WSFederationMessage.TryCreateFromUri(Request.RequestUri, out message))
             {
                 var signin = message as SignInRequestMessage;
                 if (signin != null)
                 {
+                    _logger.Info("WsFederation signin request");
                     return await ProcessSignInAsync(signin);
                 }
 
                 var signout = message as SignOutRequestMessage;
                 if (signout != null)
                 {
+                    _logger.Info("WsFederation signout request");
                     return RedirectToRoute(Constants.RouteNames.LogoutPrompt, null);
                 }
             }
@@ -66,13 +78,23 @@ namespace Thinktecture.IdentityServer.WsFed
         [HttpGet]
         public async Task<IHttpActionResult> SignOutCallback()
         {
-            var urls = await _cookies.GetValuesAndDeleteCookieAsync();
+            _logger.Info("WS-Federation signout callback");
+
+            var urls = await _cookies.GetValuesAndDeleteCookieAsync(WsFederationPluginOptions.CookieName);
             return new SignOutResult(urls);
         }
 
         [Route("wsfed/metadata")]
         public IHttpActionResult GetMetadata()
         {
+            _logger.Info("WS-Federation metadata request");
+
+            if (_wsfedOptions.EnableFederationMetadata == false)
+            {
+                _logger.Warn("Endpoint is disabled. Aborting.");
+                return NotFound();
+            }
+
             var ep = Request.GetBaseUrl(_settings.PublicHostName) + "wsfed";
             var entity = _metadataResponseGenerator.Generate(ep);
 
@@ -93,7 +115,7 @@ namespace Thinktecture.IdentityServer.WsFed
             }
 
             var responseMessage = await _signInResponseGenerator.GenerateResponseAsync(result);
-            await _cookies.AddValueAsync(result.ReplyUrl);
+            await _cookies.AddValueAsync(WsFederationPluginOptions.CookieName, result.ReplyUrl);
 
             return new SignInResult(responseMessage);
         }
@@ -108,7 +130,7 @@ namespace Thinktecture.IdentityServer.WsFed
                 message.IdP = result.HomeRealm;
             }
 
-            return new LoginResult(message, this.Request, settings);
+            return new LoginResult(message, this.Request, settings, _internalConfig);
         }
     }
 }

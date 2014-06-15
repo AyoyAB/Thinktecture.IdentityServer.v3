@@ -8,10 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityServer.Core.Authentication;
 using Thinktecture.IdentityServer.Core.Models;
-using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.AspNetIdentity
 {
@@ -325,6 +324,11 @@ namespace Thinktecture.IdentityServer.AspNetIdentity
         protected virtual IEnumerable<Claim> NormalizeExternalClaimTypes(IEnumerable<Claim> incomingClaims)
         {
             return Thinktecture.IdentityServer.Core.Plumbing.ClaimMap.Map(incomingClaims);
+        }
+
+        public Task<bool> IsActive(string subject)
+        {
+            throw new NotImplementedException();
         }
     }
 }

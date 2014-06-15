@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿/*
+ * Copyright (c) Dominick Baier, Brock Allen.  All rights reserved.
+ * see license
+ */
 
 namespace Thinktecture.IdentityServer.Core.Models
 {
@@ -7,11 +9,9 @@ namespace Thinktecture.IdentityServer.Core.Models
     {
         public EndpointSettings()
         {
-            Enabled = true;
-            AllowedOrigins = Enumerable.Empty<string>();
+            Enabled = false;
         }
 
         public bool Enabled { get; set; }
-        public IEnumerable<string> AllowedOrigins { get; set; }
     }
 }

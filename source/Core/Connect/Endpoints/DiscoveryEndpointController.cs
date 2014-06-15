@@ -10,7 +10,9 @@ using System.Web.Http;
 using System.Web.Http.Cors;
 using Thinktecture.IdentityModel;
 using Thinktecture.IdentityServer.Core.Extensions;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Core.Connect
 {
@@ -18,18 +20,29 @@ namespace Thinktecture.IdentityServer.Core.Connect
     [EnableCors("*", "*", "GET")]
     public class DiscoveryEndpointController : ApiController
     {
-        private CoreSettings _settings;
-        private IScopeService _scopes;
+        private readonly CoreSettings _settings;
+        private readonly IScopeService _scopes;
+        private readonly ILog _logger;
 
         public DiscoveryEndpointController(CoreSettings settings, IScopeService scopes)
         {
             _settings = settings;
             _scopes = scopes;
+
+            _logger = LogProvider.GetCurrentClassLogger();
         }
 
         [Route("openid-configuration")]
         public async Task<IHttpActionResult> GetConfiguration()
         {
+            _logger.Info("Start discovery request");
+
+            if (!_settings.DiscoveryEndpoint.Enabled)
+            {
+                _logger.Warn("Endpoint is disabled. Aborting");
+                return NotFound();
+            }
+
             var baseUrl = Request.GetBaseUrl(_settings.PublicHostName);
             var scopes = await _scopes.GetScopesAsync();
 
@@ -53,6 +66,14 @@ namespace Thinktecture.IdentityServer.Core.Connect
         [Route("jwks")]
         public IHttpActionResult GetKeyData()
         {
+            _logger.Info("Start key discovery request");
+
+            if (!_settings.DiscoveryEndpoint.Enabled)
+            {
+                _logger.Warn("Endpoint is disabled. Aborting");
+                return NotFound();
+            }
+
             var cert = _settings.SigningCertificate;
             var cert64 = Convert.ToBase64String(cert.RawData);
             var thumbprint = Base64Url.Encode(cert.GetCertHash());

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Thinktecture.IdentityServer.Core.Authentication;
 using Thinktecture.IdentityServer.Core.Connect.Models;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Core.Connect
 {
@@ -42,6 +43,18 @@ namespace Thinktecture.IdentityServer.Core.Connect
                 _signIn.UILocales = request.UiLocales;
             }
 
+            if (request.PromptMode == Constants.PromptModes.Login)
+            {
+                // remove prompt so when we redirect back in from login page
+                // we won't think we need to force a prompt again
+                request.Raw.Remove(Constants.AuthorizeRequest.Prompt);
+                return new InteractionResponse
+                {
+                    IsLogin = true,
+                    SignInMessage = _signIn
+                };
+            }
+
             // unauthenticated user
             if (!user.Identity.IsAuthenticated)
             {
@@ -62,18 +75,6 @@ namespace Thinktecture.IdentityServer.Core.Connect
                     };
                 }
 
-                return new InteractionResponse
-                {
-                    IsLogin = true,
-                    SignInMessage = _signIn
-                };
-            }
-
-            if (request.PromptMode == Constants.PromptModes.Login)
-            {
-                // remove prompt so when we redirect back in from login page
-                // we won't think we need to force a prompt again
-                request.Raw.Remove(Constants.AuthorizeRequest.Prompt);
                 return new InteractionResponse
                 {
                     IsLogin = true,

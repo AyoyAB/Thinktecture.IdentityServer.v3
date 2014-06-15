@@ -7,7 +7,7 @@ using System;
 using System.Collections.Specialized;
 using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityServer.Core.Connect;
-using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 using UnitTests.Plumbing;
 
 namespace UnitTests
@@ -15,8 +15,6 @@ namespace UnitTests
     [TestClass]
     public class Authorize_ProtocolValidation_Invalid
     {
-        ILogger _logger = new DebugLogger();
-
         [TestMethod]
         [TestCategory("AuthorizeRequest Protocol Validation")]
         [ExpectedException(typeof(ArgumentNullException))]

@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace UnitTests.Plumbing
 {
@@ -35,11 +36,6 @@ namespace UnitTests.Plumbing
         public override string SiteName
         {
             get { throw new NotImplementedException(); }
-        }
-
-        public override InternalProtectionSettings GetInternalProtectionSettings()
-        {
-            throw new NotImplementedException();
         }
 
         private static byte[] ReadStream(Stream input)

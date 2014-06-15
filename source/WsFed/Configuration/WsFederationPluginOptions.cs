@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Thinktecture.IdentityServer.Core.Configuration;
 using Thinktecture.IdentityServer.WsFed.Services;
 
@@ -11,6 +7,7 @@ namespace Thinktecture.IdentityServer.WsFed.Configuration
     public class WsFederationPluginOptions
     {
         PluginConfiguration _dependencies;
+        public const string CookieName = "WsFedSignInOut";
 
         public WsFederationPluginOptions(PluginConfiguration configuration)
         {
@@ -20,9 +17,8 @@ namespace Thinktecture.IdentityServer.WsFed.Configuration
             }
             
             _dependencies = configuration;
+            EnableFederationMetadata = true;
         }
-
-        public const string WsFedCookieAuthenticationType = "WsFedSignInOut";
 
         public PluginConfiguration Configuration
         {

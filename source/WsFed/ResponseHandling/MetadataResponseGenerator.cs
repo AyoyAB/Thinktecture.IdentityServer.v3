@@ -7,17 +7,18 @@ using System.IdentityModel.Metadata;
 using System.IdentityModel.Protocols.WSTrust;
 using System.IdentityModel.Tokens;
 using Thinktecture.IdentityModel.Constants;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
 {
     public class MetadataResponseGenerator
     {
-        private ILogger _logger;
         private CoreSettings _settings;
-        public MetadataResponseGenerator(ILogger logger, CoreSettings settings)
+
+        public MetadataResponseGenerator(CoreSettings settings)
         {
-            _logger = logger;
             _settings = settings;
         }
 
@@ -61,25 +62,5 @@ namespace Thinktecture.IdentityServer.WsFed.ResponseHandling
 
             return key;
         }
-
-        //private XmlDictionaryReader CreateMetadataReader(Uri mexAddress)
-        //{
-        //    var metadataSet = new MetadataSet();
-        //    var metadataReference = new MetadataReference(new EndpointAddress(mexAddress), AddressingVersion.WSAddressing10);
-        //    var metadataSection = new MetadataSection(MetadataSection.MetadataExchangeDialect, null, metadataReference);
-        //    metadataSet.MetadataSections.Add(metadataSection);
-
-        //    var sb = new StringBuilder();
-        //    var w = new StringWriter(sb, CultureInfo.InvariantCulture);
-        //    var writer = XmlWriter.Create(w);
-
-        //    metadataSet.WriteTo(writer);
-        //    writer.Flush();
-        //    w.Flush();
-
-        //    var input = new StringReader(sb.ToString());
-        //    var reader = new XmlTextReader(input);
-        //    return XmlDictionaryReader.CreateDictionaryReader(reader);
-        //}
     }
 }

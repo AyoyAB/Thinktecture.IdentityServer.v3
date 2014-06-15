@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Thinktecture.IdentityServer.Core.Connect.Results;
+using Thinktecture.IdentityServer.Core.Logging;
 using Thinktecture.IdentityServer.Core.Models;
 
 namespace Thinktecture.IdentityServer.Core.Connect
@@ -16,21 +17,29 @@ namespace Thinktecture.IdentityServer.Core.Connect
     public class UserInfoEndpointController : ApiController
     {
         private readonly UserInfoResponseGenerator _generator;
-        private readonly ILogger _logger;
+        private readonly ILog _logger;
         private readonly TokenValidator _tokenValidator;
+        private readonly CoreSettings _settings;
 
-        public UserInfoEndpointController(TokenValidator tokenValidator, UserInfoResponseGenerator generator, ILogger logger)
+        public UserInfoEndpointController(CoreSettings settings, TokenValidator tokenValidator, UserInfoResponseGenerator generator)
         {
             _tokenValidator = tokenValidator;
             _generator = generator;
+            _settings = settings;
 
-            _logger = logger;
+            _logger = LogProvider.GetCurrentClassLogger();
         }
 
         [Route]
         public async Task<IHttpActionResult> Get(HttpRequestMessage request)
         {
-            _logger.Start("OIDC userinfo endpoint.");
+            _logger.Info("Start userinfo request");
+
+            if (!_settings.UserInfoEndpoint.Enabled)
+            {
+                _logger.Warn("Endpoint is disabled. Aborting");
+                return NotFound();
+            }
 
             var authorizationHeader = request.Headers.Authorization;
 
@@ -55,7 +64,6 @@ namespace Thinktecture.IdentityServer.Core.Connect
             var scopes = result.Claims.Where(c => c.Type == Constants.ClaimTypes.Scope).Select(c => c.Value);
 
             var payload = await _generator.ProcessAsync(subject, scopes);
-
             return new UserInfoResult(payload);
         }
 

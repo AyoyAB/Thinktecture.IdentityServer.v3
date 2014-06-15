@@ -4,12 +4,12 @@
  */
 
 using System.Security.Cryptography.X509Certificates;
+using Thinktecture.IdentityServer.Core.Configuration;
 
 namespace Thinktecture.IdentityServer.Core.Models
 {
     public abstract class CoreSettings
     {
-        public abstract InternalProtectionSettings GetInternalProtectionSettings();
         public abstract string IssuerUri { get; }
 
         public virtual X509Certificate2 SigningCertificate
@@ -27,29 +27,39 @@ namespace Thinktecture.IdentityServer.Core.Models
             get { return string.Empty; }
         }
 
+        public virtual IDataProtector DataProtector
+        {
+            get { return null; }
+        }
+
         public virtual EndpointSettings AuthorizeEndpoint
         {
-            get { return new EndpointSettings(); }
-        }
-
-        public virtual EndpointSettings DiscoveryEndpoint 
-        {
-            get { return new EndpointSettings(); }
-        }
-
-        public virtual EndpointSettings AccessTokenValidationEndpoint
-        {
-            get { return new EndpointSettings(); }
+            get { return new EndpointSettings { Enabled = true }; }
         }
 
         public virtual EndpointSettings TokenEndpoint
         {
-            get { return new EndpointSettings(); }
+            get { return new EndpointSettings { Enabled = true }; }
         }
 
         public virtual EndpointSettings UserInfoEndpoint
         {
-            get { return new EndpointSettings(); }
+            get { return new EndpointSettings { Enabled = true }; }
+        }
+
+        public virtual EndpointSettings DiscoveryEndpoint 
+        {
+            get { return new EndpointSettings { Enabled = true }; }
+        }
+
+        public virtual EndpointSettings AccessTokenValidationEndpoint
+        {
+            get { return new EndpointSettings { Enabled = true }; }
+        }
+
+        public virtual EndpointSettings EndSessionEndpoint
+        {
+            get { return new EndpointSettings { Enabled = true }; }
         }
     }
 }

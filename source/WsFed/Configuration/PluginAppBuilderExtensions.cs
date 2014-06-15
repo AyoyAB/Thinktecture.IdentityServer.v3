@@ -7,7 +7,6 @@ using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Owin;
 using System;
-using System.Collections.Generic;
 using Thinktecture.IdentityServer.WsFed;
 using Thinktecture.IdentityServer.WsFed.Configuration;
 using Thinktecture.IdentityServer.WsFed.ResponseHandling;
@@ -22,7 +21,7 @@ namespace Thinktecture.IdentityServer.Core.Configuration
         {
             app.UseCookieAuthentication(new CookieAuthenticationOptions
                 {
-                    AuthenticationType = WsFederationPluginOptions.WsFedCookieAuthenticationType,
+                    AuthenticationType = WsFederationPluginOptions.CookieName,
                     AuthenticationMode = AuthenticationMode.Passive
                 });
 
@@ -38,7 +37,8 @@ namespace Thinktecture.IdentityServer.Core.Configuration
             options.Configuration.AddType(typeof(SignInValidator));
             options.Configuration.AddType(typeof(SignInResponseGenerator));
             options.Configuration.AddType(typeof(MetadataResponseGenerator));
-            options.Configuration.AddType(typeof(CookieMiddlewareCookieService), typeof(ICookieService));
+
+            options.Configuration.AddInstance(options);
 
             options.Configuration.AddSignOutCallbackUrl("/wsfed/signout");
 

@@ -8,6 +8,7 @@ using Microsoft.Owin.Extensions;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
+using Microsoft.Owin.Security.DataProtection;
 using Microsoft.Owin.StaticFiles;
 using System;
 using System.IdentityModel.Tokens;
@@ -25,6 +26,16 @@ namespace Owin
 
             var internalConfig = new InternalConfiguration();
 
+            var settings = options.Factory.CoreSettings();
+            if (settings.DataProtector == null)
+            {
+                internalConfig.DataProtector = new HostDataProtector(app.GetDataProtectionProvider());
+            }
+            else
+            {
+                internalConfig.DataProtector = settings.DataProtector;
+            }
+
             // thank you Microsoft for the clean syntax
             JwtSecurityTokenHandler.InboundClaimTypeMap = ClaimMappings.None;
             JwtSecurityTokenHandler.OutboundClaimTypeMap = ClaimMappings.None;
@@ -40,7 +51,7 @@ namespace Owin
 
             if (options.PluginConfiguration != null)
             {
-                options.PluginConfiguration(app, internalConfig.PluginDependencies);
+                options.PluginConfiguration(app, internalConfig.PluginConfiguration);
             }
 
             app.UseFileServer(new FileServerOptions

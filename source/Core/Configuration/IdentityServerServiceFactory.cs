@@ -6,6 +6,7 @@
 using System;
 using Thinktecture.IdentityServer.Core.Connect.Services;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Core.Configuration
 {
@@ -23,12 +24,12 @@ namespace Thinktecture.IdentityServer.Core.Configuration
         public Func<IConsentService> ConsentService { get; set; }
         
         // optional
-        public Func<ILogger> Logger { get; set; }
         public Func<IAssertionGrantValidator> AssertionGrantValidator { get; set; }
         public Func<ICustomRequestValidator> CustomRequestValidator { get; set; }
         public Func<IClaimsProvider> ClaimsProvider { get; set; }
         public Func<ITokenService> TokenService { get; set; }
         public Func<IExternalClaimsFilter> ExternalClaimsFilter { get; set; }
+        public Func<ICustomTokenValidator> CustomTokenValidator { get; set; }
 
         internal void Validate()
         {

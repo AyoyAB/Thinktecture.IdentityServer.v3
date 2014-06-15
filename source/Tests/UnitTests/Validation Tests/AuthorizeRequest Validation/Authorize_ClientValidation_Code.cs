@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityServer.Core.Connect;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 using UnitTests.Plumbing;
 
 namespace UnitTests
@@ -15,7 +16,6 @@ namespace UnitTests
     [TestClass]
     public class Authorize_ClientValidation_Code
     {
-        ILogger _logger = new DebugLogger();
         CoreSettings _settings = new TestSettings();
 
         [TestMethod]

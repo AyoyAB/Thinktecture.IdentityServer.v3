@@ -14,6 +14,7 @@ using Thinktecture.IdentityModel.Extensions;
 using Thinktecture.IdentityServer.Core;
 using Thinktecture.IdentityServer.Core.Authentication;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 using ClaimHelper = BrockAllen.MembershipReboot.ClaimsExtensions;
 
 namespace Thinktecture.IdentityServer.MembershipReboot
@@ -257,6 +258,11 @@ namespace Thinktecture.IdentityServer.MembershipReboot
                     }
                 }
             }
+        }
+
+        public Task<bool> IsActive(string subject)
+        {
+            throw new NotImplementedException();
         }
     }
 }

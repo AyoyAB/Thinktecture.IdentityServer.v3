@@ -9,6 +9,7 @@ using System;
 using Thinktecture.IdentityServer.Core.Connect;
 using Thinktecture.IdentityServer.Core.Connect.Services;
 using Thinktecture.IdentityServer.Core.Models;
+using Thinktecture.IdentityServer.Core.Services;
 
 namespace Thinktecture.IdentityServer.Core.Configuration
 {
@@ -37,15 +38,6 @@ namespace Thinktecture.IdentityServer.Core.Configuration
             builder.Register(ctx => fact.ConsentService()).As<IConsentService>();
 
             // optional from factory
-            if (fact.Logger != null)
-            {
-                builder.Register(ctx => fact.Logger()).As<ILogger>();
-            }
-            else
-            {
-                builder.RegisterType<TraceLogger>().As<ILogger>();
-            }
-
             if (fact.ClaimsProvider != null)
             {
                 builder.Register(ctx => fact.ClaimsProvider()).As<IClaimsProvider>();
@@ -91,6 +83,15 @@ namespace Thinktecture.IdentityServer.Core.Configuration
                 builder.RegisterType<DefaultExternalClaimsFilter>().As<IExternalClaimsFilter>();
             }
 
+            if (fact.CustomTokenValidator != null)
+            {
+                builder.Register(ctx => fact.CustomTokenValidator()).As<ICustomTokenValidator>();
+            }
+            else
+            {
+                builder.RegisterType<DefaultCustomTokenValidator>().As<ICustomTokenValidator>();
+            }
+
             // validators
             builder.RegisterType<TokenRequestValidator>();
             builder.RegisterType<AuthorizeRequestValidator>();
@@ -103,6 +104,9 @@ namespace Thinktecture.IdentityServer.Core.Configuration
             builder.RegisterType<AuthorizeInteractionResponseGenerator>();
             builder.RegisterType<UserInfoResponseGenerator>();
 
+            // general services
+            builder.RegisterType<CookieMiddlewareTrackingCookieService>().As<ITrackingCookieService>();
+
             // for authentication
             var authenticationOptions = options.AuthenticationOptions ?? new AuthenticationOptions();
             builder.RegisterInstance(authenticationOptions).AsSelf();
@@ -111,20 +115,20 @@ namespace Thinktecture.IdentityServer.Core.Configuration
             builder.RegisterApiControllers(typeof(AuthorizeEndpointController).Assembly);
 
             // plugin configuration
-            var pluginDepencies = internalConfig.PluginDependencies;
-            if (pluginDepencies != null)
+            var pluginConfiguration = internalConfig.PluginConfiguration;
+            if (pluginConfiguration != null)
             {
-                if (pluginDepencies.ApiControllerAssemblies != null)
+                if (pluginConfiguration.ApiControllerAssemblies != null)
                 {
-                    foreach (var asm in pluginDepencies.ApiControllerAssemblies)
+                    foreach (var asm in pluginConfiguration.ApiControllerAssemblies)
                     {
                         builder.RegisterApiControllers(asm);
                     }
                 }
 
-                if (pluginDepencies.Types != null)
+                if (pluginConfiguration.Types != null)
                 {
-                    foreach (var type in pluginDepencies.Types)
+                    foreach (var type in pluginConfiguration.Types)
                     {
                         if (type.Value == null)
                         {
@@ -137,11 +141,19 @@ namespace Thinktecture.IdentityServer.Core.Configuration
                     }
                 }
 
-                if (pluginDepencies.Factories != null)
+                if (pluginConfiguration.Factories != null)
                 {
-                    foreach (var factory in pluginDepencies.Factories)
+                    foreach (var factory in pluginConfiguration.Factories)
                     {
                         builder.Register(ctx => factory.Value()).As(factory.Key);
+                    }
+                }
+
+                if (pluginConfiguration.Instances != null)
+                {
+                    foreach (var instance in pluginConfiguration.Instances)
+                    {
+                        builder.RegisterInstance(instance).AsSelf();
                     }
                 }
             }
